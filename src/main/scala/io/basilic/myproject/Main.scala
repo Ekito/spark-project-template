@@ -9,23 +9,18 @@ object Main {
   
     /* Configuring Spark: https://spark.apache.org/docs/latest/configuration.html */
     val conf = new SparkConf().setAppName("SparkProjectTemplate")
-    if (conf.get("spark.master", null) == null)
-      conf.setMaster("local")
-
     val sc = new SparkContext(conf)
 
     /* Using HiveContext instead of SparkContext adds a lot more SQL features (CAST(), PERCENTILE(), ...) */
     // val sqlc = new org.apache.spark.sql.hive.HiveContext(sc)
     val sqlc = new org.apache.spark.sql.SQLContext(sc)
-    
 
     /*
     Sources are standard URIs.
     Wildcard support depends on the URI scheme (not supported by file://, supported by s3n://).
     Gzip support is automatic.
      */
-    val source = getClass.getResource("/data.json").toURI.toString
-    // val source = "file:///tmp/data.json.gz"
+     val source = "file:///data/data.json"
     // val source = "s3n://bucket.name/access_logs/*/130/*.gz"
 
     /*

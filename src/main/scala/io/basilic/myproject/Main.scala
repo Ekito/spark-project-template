@@ -1,32 +1,41 @@
 package io.basilic.myproject
 
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.{SparkConf, SparkContext}
 
 object Main {
 
+
+  def sparkMaster(conf: SparkConf): String = conf.get("spark.master", "local[*]")
+
   def main(args: Array[String]) {
-  
-    /* Configuring Spark: https://spark.apache.org/docs/latest/configuration.html */
+
     val conf = new SparkConf().setAppName("SparkProjectTemplate")
+    conf.setMaster(sparkMaster(conf))
     val sc = new SparkContext(conf)
+
 
     /* Using HiveContext instead of SparkContext adds a lot more SQL features (CAST(), PERCENTILE(), ...) */
     // val sqlc = new org.apache.spark.sql.hive.HiveContext(sc)
     val sqlc = new org.apache.spark.sql.SQLContext(sc)
 
     /*
-    Sources are standard URIs.
-    Wildcard support depends on the URI scheme (not supported by file://, supported by s3n://).
-    Gzip support is automatic.
-     */
-     val source = "file:///data/data.json"
+  Sources are standard URIs.
+  Wildcard support depends on the URI scheme (not supported by file://, supported by s3n://).
+  Gzip support is automatic.
+   */
+
+    val source = sparkMaster(conf) match {
+      case "local[*]" => getClass.getResource("/data.json").toURI.toString
+      case _ => "file:///data/data.json"
+    }
+
     // val source = "s3n://bucket.name/access_logs/*/130/*.gz"
 
     /*
-    Load the source data in a SchemaRDD (ready for SQL queries)
-    and persist it on RAM, and DISK if not enough RAM
-     */
+  Load the source data in a SchemaRDD (ready for SQL queries)
+  and persist it on RAM, and DISK if not enough RAM
+   */
     val sourceRdd = sqlc
       .jsonFile(source, Schemas.mySchema)
       .persist(StorageLevel.MEMORY_AND_DISK_SER)
@@ -39,5 +48,4 @@ object Main {
     val resultRdd = sqlc.sql("SELECT * FROM mytable LIMIT 1")
     println(resultRdd.take(1).toList)
   }
-
 }

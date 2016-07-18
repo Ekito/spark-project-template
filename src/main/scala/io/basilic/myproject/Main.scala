@@ -36,8 +36,11 @@ object Main {
   Load the source data in a SchemaRDD (ready for SQL queries)
   and persist it on RAM, and DISK if not enough RAM
    */
+
     val sourceRdd = sqlc
-      .jsonFile(source, Schemas.mySchema)
+      .read
+      .schema(Schemas.mySchema)
+      .json(source)
       .persist(StorageLevel.MEMORY_AND_DISK_SER)
     println(sourceRdd.take(1).toList)
 

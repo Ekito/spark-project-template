@@ -10,47 +10,39 @@
 
 # Import the project in IntelliJ IDEA
 
-* Start IntelliJ IDEA. In the Welcome window, click on "Import Project"
+* Start IntelliJ IDEA. In the Welcome window, click on "Open Project"
 * Enter the project path
 * Choose the external model *SBT*
 * Check
   * *Use auto-import*
   * *Download sources and docs*
-* Choose a Project SDK with a version >= 1.7.
+* Choose a Project SDK with a version >= 1.8.
 * Move the `Main` and `Schema` classes to your package name
-* Right-click on the `Main` class and click `Run Main`
+* Define a Launcher with an SBT task `run`
 
 # Build and run your Spark job on a Spark cluster
 
-We use [sbt-assembly](https://github.com/sbt/sbt-assembly) to bundle the application in a fat JAR, ready to be submitted to a Spark cluster. The JAR must not include the Spark components (spark-core, spark-sql, hadoop-client, etc) and their dependencies.
+We use [sbt-assembly](https://github.com/sbt/sbt-assembly) to bundle the application in a fat JAR, ready to be 
+submitted to a Spark cluster. The JAR must not include the Spark components (spark-core, spark-sql, hadoop-client, etc) 
+and their dependencies.
 
 ## To build the JAR:
-
-* first exit Intellij IDEA if it's configured to track the changes to *build.sbt*
-* edit *build.sbt*, to switch the *spark-** and *hadoop-** dependencies (see the comments inside *build.sbt*)
-* run `sbt assembly`. The generated is in *target/scala-2.10/{projectname}-assembly-{version}.jar*
-
-*TODO: try to remove the manual part of editing *build.sbt*.*
+* run `sbt assembly`. The generated jar is in *target/scala-2.10/{projectname}-assembly-{version}.jar
 
 ## To submit the JAR:
 
-* scp the JAR on the spark master
-* ssh on the spark master
-* to prevent the job from stopping if you disconnect from the server, run: `screen`
-* submit the JAR with the command: `~/spark/bin/spark-submit --master spark://ec2-w-x-y-z.eu-west-1.compute.amazonaws.com:7077 --class io.basilic.MySparkJob ~/MyProject-assembly-1.0.jar > /mnt/job.out &> /mnt/job.err`
-* tail logs with: `tail -f /mnt/job.{out,err}`
+This project is a companion of the [sparkassandra-dockerized](https://github.com/Ekito/sparkassandra-dockerized) project
+
+* check out this project
+* go into the platform directory and start a spark-cassandra cluster
+```
+$> cd platform
+$> docker compose up -d
+```
+* now within this project, configure the `buildAndSubmit.sh` script
+* Finally, run `buildAndSubmit.sh` in order to submit the job to the cluster
+
 
 # Treats
 
 * Visualize the [graph of dependencies](https://github.com/jrudolph/sbt-dependency-graph) with the command `sbt dependency-graph`.
-
-# Starting a Spark Cluster on EC2
-
-TODO: write this paragraph
-
-    TODO: By default, spark-ec2 runs with hadoop-client on 1.0.4.
-      One can also run the cluster on 2.0.x with `--hadoop-major-version=2`,
-      which is an alpha version. @see http://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client
-      spark-ec2 does not provide a way to use the stable 2.4
-      It would be nice to find a way to run spark-ec2 with the hadoop-client 2.4.x.
-      @see https://groups.google.com/d/msg/spark-users/pHaF01sPwBo/faHr-fEAFbYJ
